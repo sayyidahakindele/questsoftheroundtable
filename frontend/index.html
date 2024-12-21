@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Card Game</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div id="gameArea">
+        <div id="playerTop" class="player-edge"></div>
+        <div id="playerRight" class="player-edge"></div>
+        <div id="middle">
+            <button id="startGameButton">Start Game</button>
+            <h3 id="prompt"></h3>
+            <p id="description"></p>
+            <div id="eventDeck" class="deck" onclick="pickCard()"></div>
+            <button id="y" class="yes">YES</button>
+            <button id="n" class="no">NO</button>
+            <div id="building"></div>
+        </div>
+        <div id="playerBottom" class="player-edge"></div>
+        <div id="playerLeft" class="player-edge"></div>
+    </div>
+<br>
+<script src="script.js"></script>
+</body>
+</html>
