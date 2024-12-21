@@ -14,11 +14,17 @@
             <button id="startGameButton">Start Game</button>
             <h3 id="prompt"></h3>
             <p id="description"></p>
-            <div id="eventDeck" class="deck" onclick="pickCard()"></div>
-            <button id="y" class="yes">YES</button>
-            <button id="n" class="no">NO</button>
-            <div id="building"></div>
+            <div id="event">
+                <div id="eventDeck" class="deck" onclick="pickCard()"></div>
+                <div id="currentEvent" class="deck"></div>
+            </div>
+            <div id="buttons">
+                <button id="y" class="yes">YES</button>
+                <button id="n" class="no">NO</button>
+            </div>
+
         </div>
+        <div id="building"></div>
         <div id="playerBottom" class="player-edge"></div>
         <div id="playerLeft" class="player-edge"></div>
     </div>

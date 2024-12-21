@@ -1,4 +1,3 @@
-/* General Reset */
 * {
     margin: 0;
     padding: 0;
@@ -6,7 +5,6 @@
 }
 
 body {
-    background-color: green;
     font-family: Arial, sans-serif;
     display: flex;
     justify-content: center;
@@ -15,30 +13,27 @@ body {
     overflow: hidden;
 }
 
-/* Hide game area initially */
 .hidden {
     display: none;
 }
 
-/* Game Area Layout */
 #gameArea {
+    background: #ADD8E6;
     position: relative;
-    width: 100%;
-    height: 100vh; /* Full viewport height */
-    border: 2px solid black;
+    width: 95vmin;
+    height: 95vmin;
     display: flex;
     justify-content: center;
     align-items: center;
-    background-color: #f0f0f0;
+    border-radius: 20px;
+    box-shadow: 0 30px 20px rgba(0, 0, 0, 0.2);
 }
 
-/* Top edge - Rotate 180 degrees so content faces outward */
 #playerTop {
     top: 0;
     left: 0;
-    width: 100%;
+    width: 80%;
     height: 15%;
-    transform: rotate(180deg); /* Flip the content */
     display: flex;
     justify-content: center;
     align-items: center;
@@ -55,7 +50,6 @@ body {
     background-image: url('/images/back.jpg');
 }
 
-/* Bottom edge - Content should face outward */
 #playerBottom {
     bottom: 0;
     left: 0;
@@ -66,11 +60,10 @@ body {
     align-items: center;
 }
 
-/* Right edge - Full height on the right, rotate the text 90 degrees */
 #playerRight {
     right: 0;
     top: 0;
-    height: 100%;
+    height: 80%;
     width: 15%;
     writing-mode: vertical-lr;
     transform: rotate(180deg);
@@ -90,11 +83,10 @@ body {
     background-image: url('/images/back.jpg');
 }
 
-/* Left edge - Full height on the left, rotate the text -90 degrees */
 #playerLeft {
     left: 0;
     top: 0;
-    height: 100%;
+    height: 80%;
     width: 15%;
     writing-mode: vertical-rl;
     display: flex;
@@ -113,11 +105,9 @@ body {
     background-image: url('/images/back.jpg');
 }
 
-
-/* Center Area */
 #middle {
     position: absolute;
-    top: 50%;
+    top: 40%;
     left: 50%;
     transform: translate(-50%, -50%);
     display: flex;
@@ -130,15 +120,49 @@ body {
     box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
 }
 
+#building {
+    position: absolute;
+    top: 70%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    background: #fff;
+    padding: 5px;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+}
+
+#event {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 10px;
+}
+
 #eventDeck {
-	width: 60px;
-    height: 80px;
+	width: 70px;
+    height: 100px;
     background-size: cover;
     background-repeat: no-repeat;
     background-position: center;
     border: 1px solid #ccc;
     cursor: pointer;
+    margin-bottom: 10px;
     background-image: url('/images/back.jpg');
+    border-radius: 4px;
+}
+
+#currentEvent {
+	width: 70px;
+    height: 100px;
+    background-size: cover;
+    background-repeat: no-repeat;
+    background-position: center;
+    border: 1px solid #ccc;
+    margin-bottom: 10px;
+    background-color: grey;
     border-radius: 4px;
 }
 
@@ -147,15 +171,25 @@ body {
     text-align: center;
 }
 
+#buttons {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 10px;
+}
+
+#y, #n {
+
+}
+
 .card {
-    display: inline-block; /* Display each card inline */
-        padding: 5px 10px; /* Add spacing inside each card */
-        margin: 5px; /* Add spacing between cards */
-        background-color: #e0f7fa; /* Light cyan background */
-        border: 1px solid #008080; /* Teal border */
-        border-radius: 4px; /* Rounded corners for cards */
-        font-family: monospace; /* Monospaced font for alignment consistency */
-        font-size: 14px; /* Font size for card text */
+    display: inline-block;
+        padding: 5px 10px;
+        margin: 5px;
+        background-color:
+        border: 1px solid #008080;
+        border-radius: 4px;
+        font-family: monospace;
         white-space: nowrap;
         cursor: pointer;
 }
@@ -165,17 +199,14 @@ body {
     top: -30px;
     font-size: 16px;
     font-weight: bold;
-    color: #fff;
 }
 
 .player-edge {
     position: absolute;
     display: flex;
-    flex-direction: column; /* Stack player info above cards */
+    flex-direction: column;
     justify-content: center;
     align-items: center;
-    background-color: #ddd;
-    border: 1px solid #999;
     padding: 10px;
     box-sizing: border-box;
 }

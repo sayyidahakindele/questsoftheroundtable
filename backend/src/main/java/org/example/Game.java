@@ -156,7 +156,11 @@ public class Game {
         if (answer.equalsIgnoreCase("Y")) {
             ArrayList<Player> initialParticipants = new ArrayList<>(players);
             Player sponsor = initialParticipants.remove(current-1);
-            currentQuest = new Quest(sponsor, initialParticipants, stages);
+            Map<Integer, Deck> initial = new HashMap<>();
+            for (int i=0; i<initialParticipants.size(); i++) {
+                initial.put(initialParticipants.get(i).getId(), new Deck("empty"));
+            }
+            currentQuest = new Quest(sponsor, initial, stages);
             return new State<>("Player " + current + " decides to sponsor the quest", "complete", wrapInfo());
         }
         return new State<>("", "progress", wrapInfo());
@@ -202,6 +206,44 @@ public class Game {
         int index = Integer.parseInt(request.get("input"));
         Card card = currentQuest.GetDeck(stage).getCards().remove(index);
         players.get(currentQuest.GetSponsor()-1).AddCard(card);
+        return new State("", "adding", wrapInfo());
+    }
+
+    @PostMapping("/leave")
+    private State RemoveParticipant(@RequestBody Map<String, String> request) {
+        int id = Integer.parseInt(request.get("id"));
+        currentQuest.GetParticipants(id);
+        return new State("", "removing", wrapInfo());
+    }
+
+    @PostMapping("/buildattack")
+    private State BuildAttack(@RequestBody Map<String, String> request) {
+        int id = Integer.parseInt(request.get("id"));
+        int index = Integer.parseInt(request.get("input"));
+        Card card = players.get(id-1).PickCard(index);
+        State state = currentQuest.AddCardToAttack(id, card);
+        if (Objects.equals(state.context, "invalid")) {
+            players.get(id-1).AddCard(card);
+        }
+        state.data = wrapInfo();
+        return state;
+    }
+
+    @PostMapping("/resolveattack")
+    private State ResolveAttack(@RequestBody Map<String, String> request) {
+        int id = Integer.parseInt(request.get("id"));
+        int stage = Integer.parseInt(request.get("stage"));
+        State state = currentQuest.ResolveAttack(id, stage);
+        state.data = wrapInfo();
+        return state;
+    }
+
+    @PostMapping("/returncard")
+    private State ReturnCard(@RequestBody Map<String, String> request) {
+        int id = Integer.parseInt(request.get("id"));
+        int index = Integer.parseInt(request.get("input"));
+        Card card = currentQuest.GetParticipant(id).getCards().remove(index);
+        players.get(id-1).AddCard(card);
         return new State("", "adding", wrapInfo());
     }
 }

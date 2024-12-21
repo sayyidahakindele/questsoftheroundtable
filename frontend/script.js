@@ -58,6 +58,8 @@ async function pickCard() {
                     clickable = true;
                    	await buildQuest(JSON.stringify(result.data.value));
                    	await wait(2000)
+                   	await playQuest(JSON.stringify(result.data.value));
+                   	await wait(2000)
             	}
 				displayMessage("Quest is over", "prompt");
             }
@@ -144,15 +146,39 @@ async function trimHand(playerId) {
 
 function waitForCardPick() {
     return new Promise((resolve) => {
-		const playerCards = document.querySelector('#playerBottom').querySelectorAll('.card');
-        playerCards.forEach((card, index) => {
-            card.addEventListener(
-                'click',() => {
-                	resolve(index);
-                },
-                { once: true } // Remove listener after one click
-            );
-        });
+			const cards = document.querySelector('#playerBottom').querySelectorAll('.card')
+			const pickedcards = document.querySelector(`#stage`).querySelectorAll('.card')
+			const doneButton = document.getElementById(`doneButton`);
+
+			cards.forEach((card, index) => {
+				card.addEventListener(
+					'click',
+					() => {
+						resolve({ type: 'card', index });
+					},
+					{ once: true }
+				);
+			});
+
+			pickedcards.forEach((card, index) => {
+				card.addEventListener(
+					'click',
+					() => {
+						resolve({ type: 'picked', index });
+					},
+					{ once: true }
+				);
+			});
+
+			if (doneButton) {
+				doneButton.addEventListener(
+					'click',
+					() => {
+						resolve({ type: "done" });
+					},
+					{ once: true }
+				);
+			}
     });
 }
 
@@ -387,10 +413,6 @@ async function completeBuilding() {
 					completeButton.innerText = "COMPLETE";
 					displayQuest(game.currentQuest.queststagecards.length, 0);
 					buildingDiv.appendChild(completeButton);
-
-					const edit = await waitForCardOrEnd(0);
-					buildStage(edit.stage)
-
 					await waitForComplete();
 					break;
 				}
@@ -405,6 +427,120 @@ async function completeBuilding() {
     }
 
 
+}
+
+async function playQuest(numStages) {
+	console.log("PlayQuest")
+
+	for (let i=1; i<=numStages; i++) {
+		console.log("playing stage " + i)
+		let currentGame = game;
+		for (let j=1; j<= Object.keys(currentGame.currentQuest.participants).length; j++) {
+			console.log(Object.keys(currentGame.currentQuest.participants)[j-1] + " playing stage " + i)
+			current = Object.keys(currentGame.currentQuest.participants)[j-1];
+            changePlayer();
+            displayPlayers();
+            clickable = true;
+			displayMessage("Do you want to participate in this stage?", "prompt");
+			const selectedAnswer = await waitForYorN();
+			if (selectedAnswer == "y") {
+				displayMessage("Building attack", "prompt");
+				displayAttack(current)
+				await buildAttack(current, i);
+			} else if (selectedAnswer == "n") {
+		 		try {
+					const response = await fetch(`${apiBaseUrl}/leave`, {
+						method: 'POST',
+						headers: { 'Content-Type': 'application/json' },
+						body: JSON.stringify({ id: current }),
+					});
+
+					if (!response.ok) {
+						const errorText = await response.text();
+						console.error("Failed to remove participant:", errorText);
+					} else {
+						const result = await response.json();
+						game = result.data;
+						console.log(result)
+					}
+				} catch (error) {
+					console.error("Error removing participant in playQuest:", error);
+				}
+			}
+		}
+		// get new game
+		await wait(2000)
+	}
+}
+
+async function buildAttack(id, stage) {
+	console.log(`buildAttack${id}`);
+
+	while (true) {
+        const result = await waitForCardPick();
+        if (result.type === "card") {
+			try {
+				const response = await fetch(`${apiBaseUrl}/buildattack`, {
+					method: 'POST',
+					headers: { 'Content-Type': 'application/json' },
+					body: JSON.stringify({ id: id, input: result.index }),
+				});
+				if (!response.ok) {
+					const errorText = await response.text();
+					console.error("Failed to add card to attack:", errorText);
+				} else {
+					const result = await response.json();
+					game = result.data;
+					displayMessage(result.message, "description");
+					console.log(game)
+					displayAttack(id);
+					displayPlayers();
+				}
+			} catch (error) {
+				console.error("Error in BuildAttack:", error);
+			}
+        } else if (result.type === "done") {
+			try {
+				const response = await fetch(`${apiBaseUrl}/resolveattack`, {
+					method: 'POST',
+					headers: { 'Content-Type': 'application/json' },
+					body: JSON.stringify({ id: id, stage: stage }),
+				});
+
+				if (!response.ok) {
+					const errorText = await response.text();
+					console.error("Failed to resolve attack:", errorText);
+				} else {
+					const result = await response.json();
+					displayMessage(result.message, "description");
+					game = result.data
+					break;
+				}
+			} catch (error) {
+        		console.error("Error in ending BuildStage:", error);
+        	}
+        } else if (result.type == "picked") {
+			try {
+				const response = await fetch(`${apiBaseUrl}/returncard`, {
+					method: 'POST',
+					headers: { 'Content-Type': 'application/json' },
+					body: JSON.stringify({ id: id, input: result.index}),
+				});
+
+				if (!response.ok) {
+					const errorText = await response.text();
+					console.error("Failed to addcard:", errorText);
+				} else {
+					const result = await response.json();
+                    game = result.data;
+					displayAttack(id)
+					displayPlayers();
+				}
+			} catch (error) {
+        		console.error("Error in returning card in BuildStage:", error);
+        	}
+        }
+    }
 }
 
 // display
@@ -447,11 +583,13 @@ function displayQuest(numStages, stagenum) {
 					stage.appendChild(errorMessage);
 				}
 			} else {
-				let doneButton = document.createElement("button");
-                doneButton.id = `editButton${i}`;
-                doneButton.classList.add(`edit${i}`);
-                doneButton.innerText = "Edit";
-                stage.appendChild(doneButton);
+				if (stagenum > 0) {
+					let doneButton = document.createElement("button");
+					doneButton.id = `editButton${i}`;
+					doneButton.classList.add(`edit${i}`);
+					doneButton.innerText = "Edit";
+					stage.appendChild(doneButton);
+				}
 			}
         } else {
         	if (i === stagenum) {
@@ -463,6 +601,38 @@ function displayQuest(numStages, stagenum) {
         }
         buildingDiv.appendChild(stage)
 	}
+}
+
+function displayAttack(id) {
+	const buildingDiv = document.getElementById("building");
+    buildingDiv.innerHTML = "";
+    let stage = document.createElement('div');
+    stage.id = `stage`
+    stage.classList.add('stage');
+
+	let stageTitle = document.createElement('h3');
+	stageTitle.innerText = `Attack:`;
+	stage.appendChild(stageTitle);
+
+	let cardsContainer = document.createElement('div');
+	cardsContainer.id = `cards`;
+	console.log(game.currentQuest.participants[id].cards)
+	if (game.currentQuest.participants[id] && Array.isArray(game.currentQuest.participants[id].cards)) {
+    	game.currentQuest.participants[id].cards.forEach((card, index) => {
+                const cardDiv = document.createElement('div');
+                cardDiv.classList.add('card', `picked`);
+                cardDiv.innerText = `${card.code}${card.value}`;
+                cardsContainer.appendChild(cardDiv);
+        });
+    }
+    stage.appendChild(cardsContainer);
+    let doneButton = document.createElement("button");
+    doneButton.id = `doneButton`;
+    doneButton.classList.add(`done`);
+    doneButton.innerText = "Done";
+    stage.appendChild(doneButton);
+
+    buildingDiv.appendChild(stage)
 }
 
 function changePlayer() {
@@ -512,6 +682,10 @@ function displayMessage(message, section) {
 	} else if (section == "prompt") {
     	document.getElementById("prompt").innerText = message
     }
+}
+
+function displayCard(card) {
+	document.getElementById("currentEvent").innerText = card.name;
 }
 
 function wait(ms) {
